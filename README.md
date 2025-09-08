@@ -23,8 +23,12 @@ Alternatively you can also find Python in the Microsoft Store for Windows machin
 
 **Once you have Python installed, launch a command prompt / terminal / powershell window and change to the folder you've copied this project into.**
 
-In the command prompt window, type:
+For example, assuming you're on a Mac and created a folder on your desktop named "your-folder": 
 
+In the command prompt window, type:
+`cd ~/Desktop/your-folder`
+
+Then, type: 
 `pip install requests`
 
 and press enter. This will add a necessary library to your new Python install to enable it to download files over the web. 
