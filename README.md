@@ -27,6 +27,8 @@ For example, assuming you're on a Mac and created a folder on your desktop named
 
 In the command prompt window, type:
 `cd ~/Desktop/your-folder`
+If you've got a space in the folder name, you'll need to wrap the folder in " characters; eg: `cd "~/Desktop/your folder"`
+
 
 Then, type: 
 `pip install requests`
