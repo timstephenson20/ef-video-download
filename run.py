@@ -29,17 +29,18 @@ from typing import List, Set, Tuple, Optional
 
 
 class VideoDownloader:
-    def __init__(self, start_url: str, output_dir: str):
+    def __init__(self, start_url: str, output_dir: str, skip_summary: bool = False):
         self.start_url = start_url
         self.output_dir = Path(output_dir)
+        self.skip_summary = skip_summary
         self.session = requests.Session()
         self.session.headers.update({
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
         })
-        
+
         # Create output directory if it doesn't exist
         self.output_dir.mkdir(parents=True, exist_ok=True)
-        
+
         # Statistics
         self.total_found = 0
         self.total_downloaded = 0
@@ -309,35 +310,96 @@ class VideoDownloader:
                     total_size += size
                     print(f"  - {file_path.name} ({size:,} bytes)")
                 print(f"\nTotal size: {total_size:,} bytes ({total_size / (1024*1024):.1f} MB)")
-    
+
+    @staticmethod
+    def print_final_summary(total_found: int, total_downloaded: int, failed_downloads: List[str], output_dir: Path) -> None:
+        """Print final download summary statistics for multiple URLs"""
+        print("\n" + "=" * 60)
+        print("FINAL DOWNLOAD SUMMARY")
+        print("=" * 60)
+        print(f"Total URLs found across all galleries: {total_found}")
+        print(f"Successfully downloaded: {total_downloaded}")
+        print(f"Failed downloads: {len(failed_downloads)}")
+
+        if failed_downloads:
+            print("\nFailed URLs:")
+            for url in failed_downloads:
+                print(f"  - {url}")
+
+        print(f"\nFiles saved to: {output_dir.absolute()}")
+
+        # List downloaded files
+        if output_dir.exists():
+            downloaded_files = list(output_dir.glob("*.mp4"))
+            if downloaded_files:
+                print(f"\nDownloaded files ({len(downloaded_files)}):")
+                total_size = 0
+                for file_path in sorted(downloaded_files):
+                    size = file_path.stat().st_size
+                    total_size += size
+                    print(f"  - {file_path.name} ({size:,} bytes)")
+                print(f"\nTotal size: {total_size:,} bytes ({total_size / (1024*1024):.1f} MB)")
+
     def run(self) -> None:
         """Main execution method"""
-        print("EazyFlicks Video Downloader")
+        print(f"EazyFlicks Video Downloader - Processing: {self.start_url}")
         print("=" * 40)
-        
+
         # Fetch the start page
         html_content = self.fetch_page(self.start_url)
         if not html_content:
             print("ERROR: Could not fetch the start page")
-            sys.exit(1)
-        
+            return
+
         # Extract video URLs
         video_urls = self.extract_video_urls(html_content)
         if not video_urls:
             print("ERROR: No video URLs found")
-            sys.exit(1)
-        
+            return
+
         # Download all videos
         self.download_all_videos(video_urls)
-        
-        # Print summary
-        self.print_summary()
+
+        # Print summary if not skipped
+        if not self.skip_summary:
+            self.print_summary()
 
 def main():
     """Main entry point"""
     try:
-        downloader = VideoDownloader(startURL, outputPath)
-        downloader.run()
+        # Parse startURL: if contains ';', split into list, else single URL
+        if ';' in startURL:
+            urls = [u.strip() for u in startURL.split(';') if u.strip()]
+        else:
+            urls = [startURL]
+
+        print(f"EazyFlicks Video Downloader")
+        print(f"Processing {len(urls)} gallery URL(s)")
+        print("=" * 40)
+
+        # Initialize accumulators
+        total_found = 0
+        total_downloaded = 0
+        all_failed = []
+
+        # Process each URL
+        for i, url in enumerate(urls, 1):
+            print(f"\n{'='*60}")
+            print(f"GALLERY {i}/{len(urls)}: {url}")
+            print(f"{'='*60}")
+
+            downloader = VideoDownloader(url, outputPath, skip_summary=True)
+            downloader.run()
+
+            # Accumulate statistics
+            total_found += downloader.total_found
+            total_downloaded += downloader.total_downloaded
+            all_failed.extend(downloader.failed_downloads)
+
+        # Print final summary
+        output_dir = Path(outputPath)
+        VideoDownloader.print_final_summary(total_found, total_downloaded, all_failed, output_dir)
+
     except KeyboardInterrupt:
         print("\n\nDownload interrupted by user")
         sys.exit(1)

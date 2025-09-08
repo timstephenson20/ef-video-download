@@ -43,8 +43,15 @@ If that doesn't work, try
 **First, you need to sign into your EazyFlicks account and create a new Collection page.**
 Add all videos you want to download to this Collection and copy the URL for the page. 
 
-Edit the file run.py using Notepad or whatever editor you prefer, and edit the line that begins "startURL" to have the address of your new collection page.
+Edit the file run.py using Notepad or whatever editor you prefer, and edit the line that begins "startURL" to have the address of your new collection page(s).
+
+For a single collection:
 `startURL = "https://eazyflicks.com/App/YOURACCOUNT/your-collection-to-download/"`
+
+For multiple collections, separate them with semicolons:
+`startURL = "https://eazyflicks.com/App/YOURACCOUNT/collection1/;https://eazyflicks.com/App/YOURACCOUNT/collection2/;https://eazyflicks.com/App/YOURACCOUNT/collection3/"`
+
+The script will process each collection URL sequentially and provide a combined summary at the end.
 
 By default, the script will place downloaded videos into a folder called "mediafiles" located wherever you have the run.py script. 
 Edit the outputPath setting to change this - specify a full path to wherever you would like the video files to be saved.  eg:
